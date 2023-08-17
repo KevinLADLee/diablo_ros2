@@ -17,19 +17,19 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
-find_package(rclcpp REQUIRED)
-find_package(diablo_body REQUIRED)
-find_package(ament_cmake REQUIRED)
-find_package(motion_msgs REQUIRED)
-find_package(diablo_utils REQUIRED)
-
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  diablo_body
+  motion_msgs
+  diablo_utils
+)
 
 include_directories(
-    include
+  ${catkin_INCLUDE_DIRS}
+  include
 )
 
 set(dependencies
-  rclcpp
   diablo_body
   motion_msgs
   diablo_utils
@@ -37,38 +37,37 @@ set(dependencies
 
 set(executable_name diablo_ctrl_node)
 
+catkin_package(
+  INCLUDE_DIRS include
+  # LIBRARIES 
+  CATKIN_DEPENDS ${dependencies}
+  # DEPENDS 
+)
+
 add_executable(${executable_name} 
       src/diablo_ctrl.cpp
   )
 
-ament_target_dependencies(${executable_name} ${dependencies})
-# ament_target_dependencies(${library_name} ${dependencies})
-
-
-install(TARGETS ${library_name}
-  DESTINATION lib)
-
-install(TARGETS ${executable_name}
-  DESTINATION lib/${PROJECT_NAME}
+target_link_libraries(${executable_name}
+  ${catkin_LIBRARIES}
 )
 
-install(DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
+install(
+  TARGETS ${executable_name}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+install(
+  TARGETS ${library_name}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
-ament_export_include_directories(include)
-ament_export_libraries(${library_name})
-ament_export_dependencies(${dependencies})
-ament_package()
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 

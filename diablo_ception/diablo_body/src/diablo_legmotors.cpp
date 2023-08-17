@@ -4,14 +4,14 @@ using namespace std::chrono;
 
 void diablo_motors_publisher::motors_pub_init(void)
 {
-    motors_Publisher_ = this->node_ptr->create_publisher<motion_msgs::msg::LegMotors>("diablo/sensor/Motors",10);
-    timer_ = this->node_ptr->create_wall_timer(20ms,std::bind(&diablo_motors_publisher::lazyMotorsPublisher, this));
+    motors_Publisher_ = this->node_ptr->advertise<motion_msgs::LegMotors>("diablo/sensor/Motors",10);
+    timer_ = this->node_ptr->createWallTimer(ros::WallDuration(0.02), &diablo_motors_publisher::lazyMotorsPublisher, this);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_MOTOR, OSDK_PUSH_DATA_50Hz);
     this->vehicle->telemetry->configUpdate(); 
 }
 
-void diablo_motors_publisher::lazyMotorsPublisher(void){
-    if(motors_Publisher_->get_subscription_count() > 0)
+void diablo_motors_publisher::lazyMotorsPublisher([[maybe_unused]] const ros::WallTimerEvent& event){
+    if(motors_Publisher_.getNumSubscribers() > 0)
     {
         bool motors_Pub_mark = false;
         
@@ -55,16 +55,16 @@ void diablo_motors_publisher::lazyMotorsPublisher(void){
         }
         if(motors_Pub_mark){
 
-            motors_timestamp = this->node_ptr->get_clock()->now();
+            motors_timestamp = ros::Time::now();
             motors_msg_.header.stamp = motors_timestamp;
             motors_msg_.header.frame_id = "diablo_robot";
-            motors_Publisher_->publish(motors_msg_);
+            motors_Publisher_.publish(motors_msg_);
             motors_Pub_mark = false;
         }
     }
 }
 
-diablo_motors_publisher::diablo_motors_publisher(rclcpp::Node::SharedPtr node_ptr,DIABLO::OSDK::Vehicle* vehicle)
+diablo_motors_publisher::diablo_motors_publisher(ros::NodeHandlePtr node_ptr, DIABLO::OSDK::Vehicle* vehicle)
 {
     this->node_ptr = node_ptr;
     this->vehicle = vehicle;

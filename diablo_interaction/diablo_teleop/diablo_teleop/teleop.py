@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 from http.client import OK
-import rclpy
+import rospy
 import time
 import sys
 import tty
 import termios
 import threading
-from rclpy.node import Node
 from motion_msgs.msg import MotionCtrl
 
 print("Teleop start now!")
@@ -70,10 +69,9 @@ def generMsgs(forward=None,left=None,roll=None,up=None,
 
 def main(args=None):
     global ctrlMsgs
-    rclpy.init(args=args) 
-    node = Node("diablo_teleop_node")  
+    rospy.init_node('diablo_teleop_node', anonymous=True) 
 
-    teleop_cmd = node.create_publisher(MotionCtrl,"diablo/MotionCmd",2)
+    teleop_cmd = rospy.Publisher("diablo/MotionCmd",MotionCtrl,2)
 
     while True:
         if len(keyQueue) > 0:
@@ -147,8 +145,10 @@ def main(args=None):
         teleop_cmd.publish(ctrlMsgs)
         time.sleep(0.04)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_setting)
+    rospy.spin()
     print('exit!')
-    rclpy.shutdown() 
+
+
 
 
 

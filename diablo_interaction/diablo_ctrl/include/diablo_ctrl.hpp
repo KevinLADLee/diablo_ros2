@@ -1,11 +1,11 @@
 #pragma once
 
+#include <ros/ros.h>
 #include "diablo_imu.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "diablo_battery.hpp"
 #include "diablo_legmotors.hpp"
 #include "diablo_body_state.hpp"
-#include "motion_msgs/msg/motion_ctrl.hpp"
+#include "motion_msgs/MotionCtrl.h"
 #include "diablo_utils/diablo_tools/osdk_vehicle.hpp"
 
 #define CMD_GO_FORWARD                               0x08
@@ -24,15 +24,15 @@
 #define CMD_SPEED_MODE                               0x05
 
 
-class diabloCtrlNode : public rclcpp::Node
+class diabloCtrlNode
 {
 
 public:
-    diabloCtrlNode(std::string name) : Node(name)
+    diabloCtrlNode(std::string name, ros::NodeHandlePtr node_ptr)
     {
-        RCLCPP_INFO(this->get_logger(), "Sub node: %s.",name.c_str());
-        sub_movement_cmd = this->create_subscription<motion_msgs::msg::MotionCtrl>("diablo/MotionCmd", 10, std::bind(&diabloCtrlNode::Motion_callback, this, std::placeholders::_1));
-        ctrl_msg_.value.up = 1.0;
+        ROS_INFO("Sub node: %s.",name.c_str());
+        this->node_ptr_ = node_ptr;
+        sub_movement_cmd = this->node_ptr_->subscribe<motion_msgs::MotionCtrl>("diablo/MotionCmd", 1, &diabloCtrlNode::Motion_callback, this);
     }
     ~diabloCtrlNode();
 
@@ -46,14 +46,15 @@ public:
 
 
 private:
-    void Motion_callback(const motion_msgs::msg::MotionCtrl::SharedPtr msg);
+    void Motion_callback(const motion_msgs::MotionCtrl::ConstPtr &msg);
 
 private:
-    rclcpp::Subscription<motion_msgs::msg::MotionCtrl>::SharedPtr sub_movement_cmd;
+    ros::NodeHandlePtr node_ptr_;
+    ros::Subscriber sub_movement_cmd;
     OSDK_Movement_Ctrl_t    cmd_value;
     bool                onSend = true;
     bool        thd_loop_mark_ = true;
-    motion_msgs::msg::MotionCtrl                                       ctrl_msg_;
+    motion_msgs::MotionCtrl ctrl_msg_;
 };
 
 

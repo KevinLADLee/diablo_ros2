@@ -4,9 +4,9 @@ using namespace std::chrono;
 
 void diablo_imu_publisher::imu_pub_init(void)
 {
-    imu_Publisher_ = this->node_ptr->create_publisher<sensor_msgs::msg::Imu>("diablo/sensor/Imu",10);
-    euler_Publisher_ = this->node_ptr->create_publisher<ception_msgs::msg::IMUEuler>("diablo/sensor/ImuEuler",10);
-    timer_ = this->node_ptr->create_wall_timer(20ms,std::bind(&diablo_imu_publisher::lazyPublisher, this));
+    imu_Publisher_ = this->node_ptr->advertise<sensor_msgs::Imu>("diablo/sensor/Imu",10);
+    euler_Publisher_ = this->node_ptr->advertise<ception_msgs::IMUEuler>("diablo/sensor/ImuEuler",10);
+    timer_ = this->node_ptr->createWallTimer(ros::WallDuration(0.02), &diablo_imu_publisher::lazyPublisher, this);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_QUATERNION, OSDK_PUSH_DATA_50Hz);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_ACCL, OSDK_PUSH_DATA_50Hz);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_GYRO, OSDK_PUSH_DATA_50Hz);
@@ -14,8 +14,8 @@ void diablo_imu_publisher::imu_pub_init(void)
 }
 
 
-void diablo_imu_publisher::lazyPublisher(void){
-    if(imu_Publisher_->get_subscription_count() > 0 || euler_Publisher_->get_subscription_count() > 0)
+void diablo_imu_publisher::lazyPublisher([[maybe_unused]] const ros::WallTimerEvent& event){
+    if(imu_Publisher_.getNumSubscribers() > 0 || euler_Publisher_.getNumSubscribers() > 0)
     {
         bool imu_Pub_mark = false;
         if(this->vehicle->telemetry->newcome & 0x10)
@@ -66,21 +66,21 @@ void diablo_imu_publisher::lazyPublisher(void){
         }
         if(imu_Pub_mark){
 
-            imu_timestamp = this->node_ptr->get_clock()->now();
+            imu_timestamp = ros::Time::now();
             imu_msg_.header.stamp = imu_timestamp;
             imu_msg_.header.frame_id = "diablo_robot";
 
             euler_msg_.header.stamp = imu_timestamp;
             euler_msg_.header.frame_id = "diablo_robot";
-            imu_Publisher_->publish(imu_msg_);
-            euler_Publisher_->publish(euler_msg_);
+            imu_Publisher_.publish(imu_msg_);
+            euler_Publisher_.publish(euler_msg_);
 
             imu_Pub_mark = false;
         }
     }
 }
 
-diablo_imu_publisher::diablo_imu_publisher(rclcpp::Node::SharedPtr node_ptr,DIABLO::OSDK::Vehicle* vehicle)
+diablo_imu_publisher::diablo_imu_publisher(ros::NodeHandlePtr node_ptr, DIABLO::OSDK::Vehicle* vehicle)
 {
     this->node_ptr = node_ptr;
     this->vehicle = vehicle;

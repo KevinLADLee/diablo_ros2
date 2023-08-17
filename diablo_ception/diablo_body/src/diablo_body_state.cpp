@@ -4,16 +4,16 @@ using namespace std::chrono;
 
 void diablo_body_state_publisher::body_pub_init(void)
 {
-    robot_state_Publisher_ = this->node_ptr->create_publisher<motion_msgs::msg::RobotStatus>("diablo/sensor/Body_state", 10);
-    timer_ = this->node_ptr->create_wall_timer(100ms,std::bind(&diablo_body_state_publisher::lazyPublisher, this));
+    robot_state_Publisher_ = this->node_ptr->advertise<motion_msgs::RobotStatus>("diablo/sensor/Body_state", 10);
+    timer_ = this->node_ptr->createWallTimer(ros::WallDuration(0.1), &diablo_body_state_publisher::lazyPublisher, this);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_STATUS, OSDK_PUSH_DATA_10Hz);
     this->vehicle->telemetry->configTopic(DIABLO::OSDK::TOPIC_RC, OSDK_PUSH_DATA_OFF);
     this->vehicle->telemetry->configUpdate(); 
 }
 
 
-void diablo_body_state_publisher::lazyPublisher(void){
-    if(robot_state_Publisher_->get_subscription_count() > 0)
+void diablo_body_state_publisher::lazyPublisher([[maybe_unused]] const ros::WallTimerEvent& event){
+    if(robot_state_Publisher_.getNumSubscribers() > 0)
     {
         bool body_state_Pub_mark = false;
         if(this->vehicle->telemetry->newcome & 0x40)
@@ -29,16 +29,16 @@ void diablo_body_state_publisher::lazyPublisher(void){
         
         if(body_state_Pub_mark){
 
-            robot_state_timestamp = this->node_ptr->get_clock()->now();
+            robot_state_timestamp = ros::Time::now();
             robot_state_msg_.header.stamp = robot_state_timestamp;
             robot_state_msg_.header.frame_id = "diablo_robot";
-            robot_state_Publisher_->publish(robot_state_msg_);
+            robot_state_Publisher_.publish(robot_state_msg_);
             body_state_Pub_mark = false;
         }
     }
 }
 
-diablo_body_state_publisher::diablo_body_state_publisher(rclcpp::Node::SharedPtr node_ptr,DIABLO::OSDK::Vehicle* vehicle)
+diablo_body_state_publisher::diablo_body_state_publisher(ros::NodeHandlePtr node_ptr, DIABLO::OSDK::Vehicle* vehicle)
 {
     this->node_ptr = node_ptr;
     this->vehicle = vehicle;

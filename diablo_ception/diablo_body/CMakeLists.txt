@@ -15,27 +15,28 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(motion_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(ception_msgs REQUIRED)
-find_package(diablo_utils REQUIRED)
-find_package(builtin_interfaces REQUIRED)
-
-include_directories(include)
-
-set(library_name ${PROJECT_NAME}_core)
-
-set(dependencies
-  rclcpp
-  ception_msgs
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
   sensor_msgs
   motion_msgs
+  ception_msgs
   diablo_utils
-  builtin_interfaces
 )
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  include
+)
+
+set(library_name ${PROJECT_NAME})
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS sensor_msgs motion_msgs ception_msgs diablo_utils
+  # DEPENDS 
+)
+
 
 add_library(${library_name} SHARED
   src/diablo_imu.cpp
@@ -44,30 +45,14 @@ add_library(${library_name} SHARED
   src/diablo_body_state.cpp
 )
 
-ament_target_dependencies(${library_name}
-  ${dependencies}
+install(
+  TARGETS ${library_name}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-  find_package(ament_cmake_gtest REQUIRED)
-endif()
-
-install(DIRECTORY include/
-  DESTINATION include/
+install(
+  DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
-
-install(TARGETS
-  ${library_name}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-ament_export_include_directories(include)
-ament_export_libraries(${library_name})
-ament_export_dependencies(${dependencies})
-
-ament_package()

@@ -4,7 +4,7 @@
 using namespace std;
 
 void diabloCtrlNode::heart_beat_loop(void){
-    RCLCPP_INFO(this->get_logger(), "start.");
+    ROS_INFO("start.");
     while (this->thd_loop_mark_)
     {
         if (onSend)
@@ -45,7 +45,7 @@ void diabloCtrlNode::run_(void){
     this->thread_ = std::make_shared<std::thread>(&diabloCtrlNode::heart_beat_loop,this);
 }
 
-void diabloCtrlNode::Motion_callback(const motion_msgs::msg::MotionCtrl::SharedPtr msg)
+void diabloCtrlNode::Motion_callback(const motion_msgs::MotionCtrl::ConstPtr &msg)
 {
     onSend = false;
     if(!pMovementCtrl->in_control())
@@ -89,7 +89,7 @@ void diabloCtrlNode::Motion_callback(const motion_msgs::msg::MotionCtrl::SharedP
 
 diabloCtrlNode::~diabloCtrlNode()
 {
-    RCLCPP_INFO(this->get_logger(), "done.");
+    ROS_INFO("done.");
     this->thd_loop_mark_ = false;
     thread_->join();
 }
@@ -97,8 +97,11 @@ diabloCtrlNode::~diabloCtrlNode()
 
 int main(int argc, char **argv)
 {
-    rclcpp::init(argc, argv);
-    auto node = std::make_shared<diabloCtrlNode>("diablo_ctrl_node");
+    ros::init(argc, argv, "diablo_ctrl_node");
+
+    ros::NodeHandlePtr nh_ptr = boost::make_shared<ros::NodeHandle>();
+    std::shared_ptr<diabloCtrlNode> node = std::make_shared<diabloCtrlNode>("diablo_ctrl_node", nh_ptr);
+
 
     DIABLO::OSDK::HAL_Pi Hal;
     if(Hal.init("/dev/ttyS3")) return -1;
@@ -108,16 +111,16 @@ int main(int argc, char **argv)
 
     vehicle.telemetry->activate();
 
-    diablo_imu_publisher imuPublisher(node,&vehicle);
+    diablo_imu_publisher imuPublisher(nh_ptr,&vehicle);
     imuPublisher.imu_pub_init();
 
-    diablo_battery_publisher batteryPublisher(node,&vehicle);
+    diablo_battery_publisher batteryPublisher(nh_ptr,&vehicle);
     batteryPublisher.battery_pub_init();
 
-	diablo_motors_publisher motorsPublisher(node,&vehicle);
+	diablo_motors_publisher motorsPublisher(nh_ptr,&vehicle);
     motorsPublisher.motors_pub_init();
 
-    diablo_body_state_publisher bodyStatePublisher(node,&vehicle);
+    diablo_body_state_publisher bodyStatePublisher(nh_ptr,&vehicle);
     bodyStatePublisher.body_pub_init();
 
     // vehicle.telemetry->enableLog(DIABLO::OSDK::TOPIC_POWER);
@@ -126,7 +129,7 @@ int main(int argc, char **argv)
     node->pTelemetry = vehicle.telemetry;
     node->run_();
 
-    rclcpp::spin(node);
-    rclcpp::shutdown();
+    ros::spin();
+    ros::shutdown();
     return 0;
 }
