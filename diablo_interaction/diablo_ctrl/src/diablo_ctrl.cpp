@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
 
     DIABLO::OSDK::HAL_Pi Hal;
-    if(Hal.init("/dev/ttyS3")) return -1;
+    if(Hal.init("/dev/ttyTHS0")) return -1;
 
     DIABLO::OSDK::Vehicle vehicle(&Hal);                     
     if(vehicle.init()) return -1;

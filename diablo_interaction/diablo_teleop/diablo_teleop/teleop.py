@@ -145,9 +145,9 @@ def main(args=None):
         teleop_cmd.publish(ctrlMsgs)
         time.sleep(0.04)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_setting)
-    rospy.spin()
-    print('exit!')
 
+    print('exit!')
+rospy.spin()
 
 
 
