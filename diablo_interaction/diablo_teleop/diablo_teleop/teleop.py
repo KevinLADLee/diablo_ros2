@@ -8,9 +8,6 @@ import termios
 import threading
 from motion_msgs.msg import MotionCtrl
 
-print("Teleop start now!")
-print("Press '`' to exit!")
-
 keyQueue = []
 ctrlMsgs = MotionCtrl()
 old_setting = termios.tcgetattr(sys.stdin)
@@ -30,12 +27,6 @@ def getKeyBoard():
     while True:
         c = readchar()
         keyQueue.append(c)
-
-
-t1 =threading.Thread(target=getKeyBoard)
-t1.setDaemon(True)
-t1.start()
-
 
 def generMsgs(forward=None,left=None,roll=None,up=None,
                 pitch=None,mode_mark=False,height_ctrl_mode = None,
@@ -71,7 +62,14 @@ def main(args=None):
     global ctrlMsgs
     rospy.init_node('diablo_teleop_node', anonymous=True) 
 
-    teleop_cmd = rospy.Publisher("diablo/MotionCmd",MotionCtrl,2)
+    print("Teleop start now!")
+    print("Press '`' to exit!")
+
+    t1 =threading.Thread(target=getKeyBoard)
+    t1.setDaemon(True)
+    t1.start()
+
+    teleop_cmd = rospy.Publisher("diablo/MotionCmd",MotionCtrl,queue_size=2)
 
     while True:
         if len(keyQueue) > 0:
@@ -145,10 +143,12 @@ def main(args=None):
         teleop_cmd.publish(ctrlMsgs)
         time.sleep(0.04)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_setting)
-
+    rospy.spin()
     print('exit!')
-rospy.spin()
 
+
+if __name__ == '__main__':
+    main()
 
 
 
