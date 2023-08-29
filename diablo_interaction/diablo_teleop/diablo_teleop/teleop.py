@@ -63,13 +63,14 @@ def main(args=None):
     rospy.init_node('diablo_teleop_node', anonymous=True) 
 
     print("Teleop start now!")
-    print("Press '`' to exit!")
+    print("Use wasd to control movement.")
+    print("Press 't' to exit!")
 
     t1 =threading.Thread(target=getKeyBoard)
     t1.setDaemon(True)
     t1.start()
 
-    teleop_cmd = rospy.Publisher("diablo/MotionCmd",MotionCtrl,queue_size=2)
+    teleop_cmd = rospy.Publisher("diablo/MotionCmd",MotionCtrl,queue_size=1)
 
     while True:
         if len(keyQueue) > 0:
@@ -131,7 +132,8 @@ def main(args=None):
             elif key == 'g':
                 generMsgs(mode_mark=True,dance_mode=False)
                 teleop_cmd.publish(ctrlMsgs)
-            elif key == '`':
+            elif key == 't':
+                print("exit control! Ctrl c to exit program!")
                 break
         else:
             ctrlMsgs.mode_mark = False
