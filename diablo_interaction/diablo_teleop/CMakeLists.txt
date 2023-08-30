@@ -12,6 +12,6 @@ catkin_package(
     CATKIN_DEPENDS rospy motion_msgs
 )
 
-catkin_install_python(PROGRAMS diablo_teleop/teleop.py
+catkin_install_python(PROGRAMS diablo_teleop/teleop.py diablo_teleop/teleop_cmd_vel.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
