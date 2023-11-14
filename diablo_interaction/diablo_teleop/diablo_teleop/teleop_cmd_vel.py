@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 from motion_msgs.msg import MotionCtrl
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 
 ctrlMsgs = MotionCtrl()
 ctrl_pub = rospy.Publisher("/diablo/MotionCmd",MotionCtrl,queue_size=10)
@@ -35,10 +35,10 @@ def generMsgs(forward=None,left=None,roll=None,up=None,
     if stand_mode is not None:
         ctrlMsgs.mode.stand_mode = stand_mode
 
-def cmd_vel_callback(msg: Twist):
+def cmd_vel_callback(msg: TwistStamped):
     global ctrlMsgs
-    print(msg.linear.x,msg.angular.z)
-    generMsgs(forward=msg.linear.x,left=msg.angular.z)
+    print(msg.twist.linear.x,msg.twist.angular.z)
+    generMsgs(forward=msg.twist.linear.x,left=msg.twist.angular.z)
     ctrl_pub.publish(ctrlMsgs)
 
 def safe_exit():
@@ -47,7 +47,7 @@ def safe_exit():
 
 def main():
     rospy.init_node("diablo_teleop_cmd_vel")
-    cmd_vel_sub = rospy.Subscriber("/cmd_vel",Twist, cmd_vel_callback)
+    cmd_vel_sub = rospy.Subscriber("/cmd_vel",TwistStamped, cmd_vel_callback)
     rospy.spin()
     safe_exit()
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ros/ros.h>
+#include <geometry_msgs/TwistStamped.h>
 #include "diablo_imu.hpp"
 #include "diablo_battery.hpp"
 #include "diablo_legmotors.hpp"
@@ -33,6 +34,7 @@ public:
         ROS_INFO("Sub node: %s.",name.c_str());
         this->node_ptr_ = node_ptr;
         sub_movement_cmd = this->node_ptr_->subscribe<motion_msgs::MotionCtrl>("diablo/MotionCmd", 1, &diabloCtrlNode::Motion_callback, this);
+        sub_cmd_vel_stamped = this->node_ptr_->subscribe<geometry_msgs::TwistStamped>("cmd_vel", 1, &diabloCtrlNode::Cmd_vel_callback, this);
     }
     ~diabloCtrlNode();
 
@@ -47,10 +49,12 @@ public:
 
 private:
     void Motion_callback(const motion_msgs::MotionCtrl::ConstPtr &msg);
+    void Cmd_vel_callback(const geometry_msgs::TwistStamped::ConstPtr &msg);
 
 private:
     ros::NodeHandlePtr node_ptr_;
     ros::Subscriber sub_movement_cmd;
+    ros::Subscriber sub_cmd_vel_stamped;
     OSDK_Movement_Ctrl_t    cmd_value;
     bool                onSend = true;
     bool        thd_loop_mark_ = true;
