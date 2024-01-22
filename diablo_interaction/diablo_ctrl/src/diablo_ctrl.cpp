@@ -85,7 +85,7 @@ void diabloCtrlNode::Motion_callback(const motion_msgs::MotionCtrl::ConstPtr &ms
     onSend = true;
 }
 
-void diabloCtrlNode::Cmd_vel_callback(const geometry_msgs::TwistStamped::ConstPtr &msg){
+void diabloCtrlNode::Cmd_vel_stamped_callback(const geometry_msgs::TwistStamped::ConstPtr &msg){
     onSend = false;
     if(!pMovementCtrl->in_control())
     {
@@ -98,6 +98,18 @@ void diabloCtrlNode::Cmd_vel_callback(const geometry_msgs::TwistStamped::ConstPt
     onSend = true;
 }
 
+void diabloCtrlNode::Cmd_vel_callback(const geometry_msgs::Twist::ConstPtr &msg){
+  onSend = false;
+  if(!pMovementCtrl->in_control())
+  {
+    pMovementCtrl->obtain_control();
+    return;
+  }
+  pMovementCtrl->ctrl_data.forward = msg->linear.x;
+  pMovementCtrl->ctrl_data.left = msg->angular.z;
+  pMovementCtrl->SendMovementCtrlCmd();
+  onSend = true;
+}
 
 
 diabloCtrlNode::~diabloCtrlNode()

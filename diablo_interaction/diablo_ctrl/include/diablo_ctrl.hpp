@@ -34,7 +34,8 @@ public:
         ROS_INFO("Sub node: %s.",name.c_str());
         this->node_ptr_ = node_ptr;
         sub_movement_cmd = this->node_ptr_->subscribe<motion_msgs::MotionCtrl>("diablo/MotionCmd", 1, &diabloCtrlNode::Motion_callback, this);
-        sub_cmd_vel_stamped = this->node_ptr_->subscribe<geometry_msgs::TwistStamped>("cmd_vel", 1, &diabloCtrlNode::Cmd_vel_callback, this);
+        sub_cmd_vel_stamped = this->node_ptr_->subscribe<geometry_msgs::TwistStamped>("cmd_vel_stamped", 1, &diabloCtrlNode::Cmd_vel_stamped_callback, this);
+        sub_cmd_vel = this->node_ptr_->subscribe<geometry_msgs::Twist>("cmd_vel", 1, &diabloCtrlNode::Cmd_vel_callback, this);
     }
     ~diabloCtrlNode();
 
@@ -49,12 +50,14 @@ public:
 
 private:
     void Motion_callback(const motion_msgs::MotionCtrl::ConstPtr &msg);
-    void Cmd_vel_callback(const geometry_msgs::TwistStamped::ConstPtr &msg);
+    void Cmd_vel_stamped_callback(const geometry_msgs::TwistStamped::ConstPtr &msg);
+    void Cmd_vel_callback(const geometry_msgs::Twist::ConstPtr &msg);
 
 private:
     ros::NodeHandlePtr node_ptr_;
     ros::Subscriber sub_movement_cmd;
     ros::Subscriber sub_cmd_vel_stamped;
+    ros::Subscriber sub_cmd_vel;
     OSDK_Movement_Ctrl_t    cmd_value;
     bool                onSend = true;
     bool        thd_loop_mark_ = true;
